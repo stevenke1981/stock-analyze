@@ -55,27 +55,44 @@ function SettingsPage() {
       <section className="mt-4 space-y-4 rounded-lg border border-border bg-card p-4">
         <h2 className="text-sm font-medium">AI</h2>
         <p className="text-sm text-muted-foreground">
-          預設使用伺服器端模型，金鑰不會出現在瀏覽器。若填自備相容端點，金鑰只在每次分析請求傳送到伺服器，不會寫入匯出檔。沒有金鑰時核心功能仍可用。
+          留空 Base URL 時使用固定的 xAI 端點；伺服器端 XAI_API_KEY 只會送往 api.x.ai。第三方相容端點必須使用 HTTPS，並在個股的「AI 研究」頁籤輸入該服務自己的金鑰。金鑰只保留於當前頁面記憶體，不寫入 IndexedDB 或備份。
         </p>
         <label className="block text-sm">
           <span className="mb-1 block text-xs text-muted-foreground">Base URL（可空）</span>
           <Input
-            value={s.aiBaseUrl}
-            onChange={async (e) => {
-              await saveSettings({ aiBaseUrl: e.target.value });
+            key={`ai-base-${s.aiBaseUrl}`}
+            type="url"
+            defaultValue={s.aiBaseUrl}
+            onBlur={async (e) => {
+              const value = e.currentTarget.value.trim();
+              if (value === s.aiBaseUrl) return;
+              await saveSettings({ aiBaseUrl: value });
               qc.invalidateQueries({ queryKey: ["settings"] });
             }}
             placeholder="https://api.x.ai/v1"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
           />
+          <span className="mt-1 block text-xs text-faint">
+            可填 OpenAI-compatible API 的 `/v1` Base URL；系統會自動補上 `/chat/completions`。
+          </span>
         </label>
         <label className="block text-sm">
           <span className="mb-1 block text-xs text-muted-foreground">模型</span>
           <Input
-            value={s.aiModel}
-            onChange={async (e) => {
-              await saveSettings({ aiModel: e.target.value });
+            key={`ai-model-${s.aiModel}`}
+            defaultValue={s.aiModel}
+            onBlur={async (e) => {
+              const value = e.currentTarget.value.trim() || "grok-4.5";
+              if (value === s.aiModel) return;
+              await saveSettings({ aiModel: value });
               qc.invalidateQueries({ queryKey: ["settings"] });
             }}
+            maxLength={200}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
           />
         </label>
       </section>
@@ -143,9 +160,11 @@ function SettingsPage() {
               const json = await exportAll();
               const blob = new Blob([json], { type: "application/json" });
               const a = document.createElement("a");
-              a.href = URL.createObjectURL(blob);
+              const url = URL.createObjectURL(blob);
+              a.href = url;
               a.download = "hengyan-backup.json";
               a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 0);
             }}
           >
             匯出備份
@@ -161,6 +180,7 @@ function SettingsPage() {
                 if (!file) return;
                 await importAll(await file.text());
                 qc.invalidateQueries();
+                e.currentTarget.value = "";
               }}
             />
           </label>

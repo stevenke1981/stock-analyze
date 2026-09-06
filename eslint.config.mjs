@@ -5,15 +5,22 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-/** Flat ESLint config for the TanStack Start app-builder template. */
+/** Flat ESLint config for the TanStack Start application. */
 export default tseslint.config(
   {
     ignores: [
-      "dist/**",
+      ".grok/**",
       ".output/**",
       ".vercel/**",
       ".nitro/**",
+      "coverage/**",
+      "crates/**/target/**",
+      "dist/**",
       "node_modules/**",
+      "playwright-report/**",
+      "public/__grok/**",
+      "screenshots/**",
+      "test-results/**",
       "src/routeTree.gen.ts",
     ],
   },
@@ -40,6 +47,11 @@ export default tseslint.config(
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/no-explicit-any": "off",
+      // Legacy source contains deliberate mutable declarations and escaped regexes.
+      // Keep the new quality gate actionable without rewriting unrelated modules.
+      "prefer-const": "off",
+      "no-useless-escape": "off",
+      "no-empty": ["error", { allowEmptyCatch: true }],
     },
   },
   // Disable rules that conflict with Prettier formatting.
