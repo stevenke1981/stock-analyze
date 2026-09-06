@@ -345,15 +345,35 @@ function AiPanel({
   name: string;
   payload: unknown;
 }) {
+  const settingsQuery = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const [horizon, setHorizon] = useState("3 至 6 個月");
   const [includeHoldings, setIncludeHoldings] = useState(false);
+  const [customApiKey, setCustomApiKey] = useState("");
   const [text, setText] = useState<string | null>(null);
   const [meta, setMeta] = useState<string>("");
+  const requiresCustomApiKey = requiresOwnAiKey(settingsQuery.data?.aiBaseUrl ?? "");
   const run = useMutation({
     mutationFn: async () => {
       const settings = await getSettings();
-      const dataVersion = JSON.stringify(payload).length + ":" + (payload as { snapshot?: { asOf?: string } }).snapshot?.asOf;
-      const cacheKey = `${market}:${symbol}:${dataVersion}:${PROMPT_VERSION}:${settings.aiModel || "grok-4.5"}`;
+      const baseUrl = settings.aiBaseUrl.trim();
+      const model = settings.aiModel.trim() || "grok-4.5";
+      if (requiresOwnAiKey(baseUrl) && !customApiKey.trim()) {
+        throw new Error("自訂 AI 端點必須輸入該服務自己的 API 金鑰。");
+      }
+      const payloadJson = JSON.stringify(payload);
+      const dataVersion = `${cacheFingerprint(payloadJson)}:${(payload as { snapshot?: { asOf?: string } }).snapshot?.asOf ?? ""}`;
+      const endpointKey = baseUrl.replace(/\/+$/, "") || "https://api.x.ai/v1";
+      const cacheKey = JSON.stringify([
+        "research",
+        market,
+        symbol,
+        dataVersion,
+        PROMPT_VERSION,
+        endpointKey,
+        model,
+        horizon.trim(),
+        includeHoldings,
+      ]);
       const cached = await readAi<{ text: string; model: string; analyzedAt: string }>(cacheKey);
       if (cached) return { ...cached, cached: true };
       const res = await runResearch({
@@ -363,10 +383,11 @@ function AiPanel({
           market,
           horizon,
           includeHoldings,
-          payload: JSON.stringify(payload),
+          payload: payloadJson,
           provider: {
-            baseUrl: settings.aiBaseUrl || undefined,
-            model: settings.aiModel || undefined,
+            baseUrl: baseUrl || undefined,
+            model,
+            apiKey: customApiKey.trim() || undefined,
           },
         },
       });
@@ -393,10 +414,31 @@ function AiPanel({
           <Switch checked={includeHoldings} onCheckedChange={setIncludeHoldings} />
           授權把持股摘要傳給 AI
         </label>
+        {requiresCustomApiKey ? (
+          <label className="text-sm md:col-span-2">
+            <span className="mb-1 block text-xs text-muted-foreground">自訂端點 API 金鑰（僅本頁面）</span>
+            <Input
+              type="password"
+              value={customApiKey}
+              onChange={(e) => setCustomApiKey(e.target.value)}
+              autoComplete="new-password"
+              placeholder="不會儲存，也不會寫入備份"
+            />
+            <span className="mt-1 block text-xs text-faint">
+              只會隨分析請求送往你在設定頁填入的 HTTPS 端點；伺服器的 XAI_API_KEY 絕不會轉送。
+            </span>
+          </label>
+        ) : null}
       </div>
-      <Button onClick={() => run.mutate()} disabled={run.isPending}>
+      <Button
+        onClick={() => run.mutate()}
+        disabled={run.isPending || (requiresCustomApiKey && !customApiKey.trim())}
+      >
         {run.isPending ? "分析中…" : "產生研究"}
       </Button>
+      {requiresCustomApiKey && !customApiKey.trim() ? (
+        <p className="text-xs text-muted-foreground">請先輸入自訂 AI 服務的 API 金鑰。</p>
+      ) : null}
       {run.isError ? <p className="text-sm text-up">{(run.error as Error).message}</p> : null}
       {meta ? <p className="text-xs text-faint">{meta}</p> : null}
       {text ? (
@@ -406,6 +448,24 @@ function AiPanel({
       )}
     </div>
   );
+}
+
+function requiresOwnAiKey(baseUrl: string): boolean {
+  const normalized = baseUrl.trim().replace(/\/+$/, "");
+  return (
+    normalized !== "" &&
+    normalized !== "https://api.x.ai/v1" &&
+    normalized !== "https://api.x.ai/v1/chat/completions"
+  );
+}
+
+function cacheFingerprint(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
 function WatchButton({ market, symbol }: { market: Market; symbol: string }) {

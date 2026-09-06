@@ -5,15 +5,22 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-/** Flat ESLint config for the TanStack Start app-builder template. */
+/** Flat ESLint config for the TanStack Start application. */
 export default tseslint.config(
   {
     ignores: [
-      "dist/**",
+      ".grok/**",
       ".output/**",
       ".vercel/**",
       ".nitro/**",
+      "coverage/**",
+      "crates/**/target/**",
+      "dist/**",
       "node_modules/**",
+      "playwright-report/**",
+      "public/__grok/**",
+      "screenshots/**",
+      "test-results/**",
       "src/routeTree.gen.ts",
     ],
   },

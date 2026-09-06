@@ -128,6 +128,63 @@ test("backtest does not fill at signal close", () => {
   assert.equal(r.method.includes("次一交易日開盤"), true);
 });
 
+function feeTestBars(): BarLike[] {
+  return [3, 2, 1, 2, 3, 2, 1, 1].map((close, i) => ({
+    time: `2024-01-${String(i + 1).padStart(2, "0")}`,
+    open: 10,
+    high: 11,
+    low: 1,
+    close,
+    volumeShares: 1000,
+  }));
+}
+
+test("backtest trade PnL includes buy and sell commission", () => {
+  const result = runBacktest(feeTestBars(), {
+    strategy: "sma_cross",
+    fast: 2,
+    slow: 3,
+    initialCash: 100_000,
+    commissionRate: 0.01,
+    sellTaxRate: 0,
+    slippageBps: 0,
+    lotShares: 1000,
+  });
+  const trade = result.trades[0];
+  assert.ok(trade);
+  assert.equal(trade.entryFee, 900);
+  assert.equal(trade.exitFee, 900);
+  assert.equal(trade.entryCost, 90_900);
+  assert.equal(trade.pnl, -1_800);
+  assert.ok(Math.abs((trade.returnPct ?? 0) - (-1_800 / 90_900) * 100) < 1e-12);
+  assert.ok(Math.abs((result.totalReturnPct ?? 0) - -1.8) < 1e-12);
+  assert.equal(result.winRate, 0);
+});
+
+test("backtest skips fills on zero-volume bars", () => {
+  const bars = feeTestBars();
+  bars[5].volumeShares = 0;
+  const result = runBacktest(bars, {
+    strategy: "sma_cross",
+    fast: 2,
+    slow: 3,
+    initialCash: 100_000,
+    commissionRate: 0.01,
+    sellTaxRate: 0,
+    slippageBps: 0,
+    lotShares: 1000,
+  });
+  assert.equal(result.trades.length, 0);
+  assert.ok(result.warnings.some((warning) => warning.includes("1 個訊號")));
+});
+
+test("backtest rejects invalid strategy parameters", () => {
+  assert.throws(
+    () => runBacktest(feeTestBars(), { strategy: "sma_cross", fast: 20, slow: 10 }),
+    /快線必須小於慢線/,
+  );
+});
+
 test("holdingsFrom weights sum near 100", () => {
   const tx: Transaction[] = [
     txn({ side: "buy", shares: 1000, price: 100, symbol: "2330" }),

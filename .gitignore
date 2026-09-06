@@ -1,5 +1,37 @@
+# Dependencies
 node_modules/
-.project_id
-.github_repo
+.node_modules.lock
+
+# Local environment and project metadata
 .env
 .env.*
+!.env.example
+.project_id
+.github_repo
+
+# Build and test output
+.vercel/
+.output/
+dist/
+.nitro/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Rust build output
+target/
+**/target/
+
+# Runtime logs and local databases
+*.log
+.pglite/
+*.db
+*.db-shm
+*.db-wal
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
