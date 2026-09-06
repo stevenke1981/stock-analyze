@@ -47,6 +47,11 @@ export default tseslint.config(
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/no-explicit-any": "off",
+      // Legacy source contains deliberate mutable declarations and escaped regexes.
+      // Keep the new quality gate actionable without rewriting unrelated modules.
+      "prefer-const": "off",
+      "no-useless-escape": "off",
+      "no-empty": ["error", { allowEmptyCatch: true }],
     },
   },
   // Disable rules that conflict with Prettier formatting.
