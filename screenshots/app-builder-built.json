@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "衡研",
+      "hasCanvas": false,
+      "bodyTextLen": 2357,
+      "bodyTextHash": "6e158965e310752601ef41156ee136b551eb0705a99a3e61e18cce3344b4945b",
+      "bodyTextPrefix": "衡研 台股投資研究 市場 自選 持股 選股 回測 筆記 提醒 設定 盤後資料 · 非即時 · 非投資建議 休市 Asia/Tai",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "衡研",
+      "hasCanvas": false,
+      "bodyTextLen": 2307,
+      "bodyTextHash": "afc92da556b02c10e47cb3320bbd276e8540a2ce9f2026046f1e27d755e31eb8",
+      "bodyTextPrefix": "衡研 市場總覽 台灣股市 重新整理 盤後 休市 來源 TWSE MI_INDEX / FMTQIK 行情時間 2026/09/0",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

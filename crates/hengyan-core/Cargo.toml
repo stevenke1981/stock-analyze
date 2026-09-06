@@ -1,0 +1,10 @@
+[package]
+name = "hengyan-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "衡研 core analytics: indicators, portfolio average cost, and no-lookahead backtests"
+publish = false
+
+[lib]
+path = "src/lib.rs"

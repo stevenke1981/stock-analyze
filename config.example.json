@@ -1,0 +1,7 @@
+{
+  "aiBaseUrl": "https://api.x.ai/v1",
+  "aiModel": "grok-4.5",
+  "colorConvention": "tw",
+  "theme": "dark",
+  "notes": "Do not put API keys in this file."
+}
